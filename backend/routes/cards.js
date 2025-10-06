@@ -14,11 +14,13 @@ const router = express.Router();
 
 // Validacion para URLs
 const validateURL = (value, helpers) => {
-  if (validator.isURL(value)) {
+  if (validator.isURL(value, { require_protocol: true })) {
     return value;
   }
-  return helpers.error("string.uri");
+  return helpers.message("El campo link debe ser una URL válida");
 };
+//return helpers.error("string.uri");
+//};
 
 router.get("/", getCards);
 
@@ -27,7 +29,7 @@ router.post(
   celebrate({
     body: Joi.object().keys({
       name: Joi.string().required().min(2).max(30),
-      link: Joi.string().required().custom(validateURL),
+      link: Joi.string().required().custom(validateURL, "URL validacion"),
     }),
   }),
   createCard
