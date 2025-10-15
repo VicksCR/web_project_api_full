@@ -1,0 +1,12 @@
+.infotooltip__image {
+  width: 120px;
+  height: 120px;
+}
+
+.infotooltip__text {
+  width: 80%;
+  font-family: "InterBlack";
+  font-weight: 900;
+  font-size: 20px;
+  text-align: center;
+}

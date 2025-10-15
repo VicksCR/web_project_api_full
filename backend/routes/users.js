@@ -14,7 +14,7 @@ const router = express.Router();
 
 // Validacion para URLs
 const validateURL = (value, helpers) => {
-  if (Validator.isURL(value)) {
+  if (Validator.isURL(value, { require_protocol: true })) {
     return value;
   }
   return helpers.error("string.uri");

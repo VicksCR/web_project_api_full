@@ -1,13 +1,13 @@
 const jwt = require("jsonwebtoken");
 const UnauthorizedError = require("../errors/unauthorized-error");
+const ForbiddenError = require("../errors/forbidden-err"); //Revisar si quitar o no
 const { NODE_ENV, JWT_SECRET } = process.env;
 
 module.exports = (req, res, next) => {
   const { authorization } = req.headers;
+
   if (!authorization || !authorization.startsWith("Bearer ")) {
-    return res
-      .status(403)
-      .send({ message: "Acceso prohibido, se requiere autorización" });
+    return next(new UnauthorizedError("Se requiere autorizacion"));
   }
 
   const token = authorization.replace("Bearer ", "");

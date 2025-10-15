@@ -30,7 +30,7 @@ app.use(requestLogger);
 
 //Validacion para URLs
 const validateURL = (value, helpers) => {
-  if (validator.isURL(value)) {
+  if (validator.isURL(value, { require_protocol: true })) {
     return value;
   }
   return helpers.error("string.uri");
@@ -45,7 +45,7 @@ app.post(
       about: Joi.string().min(2).max(30),
       avatar: Joi.string().custom(validateURL),
       email: Joi.string().required().email(),
-      password: Joi.string().required().min(8), //revisar el minimo de caracteres
+      password: Joi.string().required().min(8),
     }),
   }),
   createUser
@@ -56,7 +56,7 @@ app.post(
   celebrate({
     body: Joi.object().keys({
       email: Joi.string().required().email(),
-      password: Joi.string().required().min(8), //revisar el minimo de caracteres
+      password: Joi.string().required().min(8),
     }),
   }),
   login

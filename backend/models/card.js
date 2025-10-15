@@ -12,9 +12,10 @@ const cardSchema = new mongoose.Schema({
     required: true,
     validate: {
       validator: (v) =>
-        /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-\w@:%_+.~#?&//=]*)/.test(
-          v
-        ),
+        validator.isURL(v, {
+          protocols: ["http", "https"],
+          require_protocol: true,
+        }),
       message: (props) => `${props.value} no es una dirección URL válida`,
     },
   },
