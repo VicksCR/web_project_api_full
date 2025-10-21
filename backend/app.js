@@ -1,10 +1,10 @@
-/* CREAR AL CARGAR VARIABLES DE ENTORNO CON ARCHIVO .ENV
 require("dotenv").config();
-*/
+
 const express = require("express");
 const mongoose = require("mongoose");
 const { errors: celebrateErrors, celebrate, Joi } = require("celebrate");
 const validator = require("validator");
+const cors = require("cors");
 
 const { createUser, login } = require("./controllers/users");
 const { requestLogger, errorLogger } = require("./middleware/logger");
@@ -26,6 +26,10 @@ mongoose.connect("mongodb://localhost:27017/aroundb", {
 
 //Middlewares JSON
 app.use(express.json());
+
+app.use(cors());
+app.options("*", cors());
+
 app.use(requestLogger);
 
 //Validacion para URLs
@@ -35,6 +39,12 @@ const validateURL = (value, helpers) => {
   }
   return helpers.error("string.uri");
 };
+
+app.get("/crash-test", () => {
+  setTimeout(() => {
+    throw new Error("El servidor va a caerse");
+  }, 0);
+});
 
 //Rutas Publicas (no token)
 app.post(
@@ -73,6 +83,7 @@ app.use((req, res, next) => {
 });
 
 app.use(errorLogger);
+
 app.use(celebrateErrors());
 
 app.use(errorHandler);

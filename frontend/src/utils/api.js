@@ -75,12 +75,11 @@ class Api {
 }
 
 const api = new Api({
-  baseUrl: "http://localhost:3000", //el backend
-  /*"https://around-api.es.tripleten-services.com/v1",
+  baseUrl: "https://api.aroundcr.minnsroad.com",
   headers: {
-    Authorization: "d8103c68-c98a-47c6-ad4c-4da2fe47c74d",
+    authorization: localStorage.getItem("jwt"),
     "Content-Type": "application/json",
-  },*/
+  },
 });
 
 export default api;
