@@ -1,7 +1,5 @@
 const express = require("express");
 const { celebrate, Joi } = require("celebrate");
-const Validator = require("validator");
-
 const {
   getUsers,
   getUserById,
@@ -10,15 +8,9 @@ const {
   getCurrentUser,
 } = require("../controllers/users");
 
-const router = express.Router();
+const { validateURL } = require("../middleware/validators");
 
-// Validacion para URLs
-const validateURL = (value, helpers) => {
-  if (Validator.isURL(value, { require_protocol: true })) {
-    return value;
-  }
-  return helpers.error("string.uri");
-};
+const router = express.Router();
 
 router.get("/me", getCurrentUser);
 

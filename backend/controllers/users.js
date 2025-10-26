@@ -1,24 +1,25 @@
 const bcrypt = require("bcryptjs");
-const User = require("../models/user");
 const jwt = require("jsonwebtoken");
+const User = require("../models/user");
 
 const BadRequestError = require("../errors/bad-request-err");
-const UnauthorizedError = require("../errors/unauthorized-error");
+const UnauthorizedError = require("../errors/unauthorized-err");
 const NotFoundError = require("../errors/not-found-err");
-const ForbiddenError = require("../errors/forbidden-err");
 
 const { NODE_ENV, JWT_SECRET } = process.env;
 
+//Obtener todos los usuarios
 module.exports.getUsers = (req, res, next) => {
   User.find({})
-    .then((users) => res.send({ data: users }))
+    .then((users) => res.send(users))
     .catch(next);
 };
 
+//Obtener usuario por ID
 module.exports.getUserById = (req, res, next) => {
   User.findById(req.params.userId)
     .orFail(() => new NotFoundError("Usuario no encontrado"))
-    .then((user) => res.send({ data: user }))
+    .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === "CastError") {
         return next(new BadRequestError("ID de usuario inválido"));
@@ -27,23 +28,26 @@ module.exports.getUserById = (req, res, next) => {
     });
 };
 
+//Crear nuevo usuario
 module.exports.createUser = (req, res, next) => {
   const { name, about, avatar, email, password } = req.body;
+  if (!email || !password) {
+    return next(new BadRequestError("Email y contraseña son obligatorios"));
+  }
+
   bcrypt
     .hash(password, 10)
     .then((hash) => User.create({ name, about, avatar, email, password: hash }))
-    .then((user) =>
-      res.status(201).send({
-        data: {
-          _id: user._id,
-          name: user.name,
-          about: user.about,
-          avatar: user.avatar,
-          email: user.email,
-        },
-      })
-    )
+    .then((user) => {
+      const { password, ...userData } = user.toObject();
+      res.status(201).send(userData);
+    })
     .catch((err) => {
+      if (err.code === 11000) {
+        return next(
+          new BadRequestError("El correo electrónico ya está registrado")
+        );
+      }
       if (err.name === "ValidationError") {
         return next(new BadRequestError("Datos inválidos"));
       }
@@ -51,15 +55,17 @@ module.exports.createUser = (req, res, next) => {
     });
 };
 
+//Obtener el usuario actual por token
 module.exports.getCurrentUser = (req, res, next) => {
   const userId = req.user._id;
 
   User.findById(userId)
     .orFail(() => new NotFoundError("Usuario no encontrado"))
-    .then((user) => res.send({ data: user }))
+    .then((user) => res.send(user))
     .catch(next);
 };
 
+//Actualizar perfil de usuario
 module.exports.updateProfile = (req, res, next) => {
   const { name, about } = req.body;
 
@@ -69,7 +75,7 @@ module.exports.updateProfile = (req, res, next) => {
     { new: true, runValidators: true }
   )
     .orFail(() => new NotFoundError("Usuario no encontrado"))
-    .then((user) => res.send({ data: user }))
+    .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === "ValidationError") {
         return next(new BadRequestError("Datos inválidos"));
@@ -78,6 +84,7 @@ module.exports.updateProfile = (req, res, next) => {
     });
 };
 
+//Actualizar avatar de usuario
 module.exports.updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
 
@@ -87,7 +94,7 @@ module.exports.updateAvatar = (req, res, next) => {
     { new: true, runValidators: true }
   )
     .orFail(() => new NotFoundError("Usuario no encontrado"))
-    .then((user) => res.send({ data: user }))
+    .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === "ValidationError") {
         return next(new BadRequestError("Datos inválidos"));
@@ -96,6 +103,7 @@ module.exports.updateAvatar = (req, res, next) => {
     });
 };
 
+//Login de usuario (autenticacion)
 module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
 
@@ -108,5 +116,5 @@ module.exports.login = (req, res, next) => {
       );
       res.send({ token });
     })
-    .catch(() => next(new UnauthorizedError("Email o contraseña incorrectos")));
+    .catch(next);
 };

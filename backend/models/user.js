@@ -1,20 +1,20 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
 const bcrypt = require("bcryptjs");
-const UnauthorizedError = require("../errors/unauthorized-error");
-
-const { Schema } = mongoose;
+const UnauthorizedError = require("../errors/unauthorized-err");
 
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
     default: "Jacques Cousteau",
+    // No instr  required: true,
     minlength: 2,
     maxlength: 30,
   },
   about: {
     type: String,
     default: "Explorador",
+    // No instr  required: true,
     minlength: 2,
     maxlength: 30,
   },
@@ -22,6 +22,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     default:
       "https://practicum-content.s3.us-west-1.amazonaws.com/resources/moved_avatar_1604080799.jpg",
+    // No instr required: true,
     validate: {
       validator: (v) =>
         validator.isURL(v, {
@@ -37,7 +38,7 @@ const userSchema = new mongoose.Schema({
     unique: true,
     validate: {
       validator: (v) => validator.isEmail(v),
-      message: (props) => `${props.value} no es un email válido`,
+      message: (props) => `${props.value} no es un correo electrónico válido`,
     },
   },
   password: {

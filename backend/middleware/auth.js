@@ -1,6 +1,6 @@
+//Aun falta modificar lo de los errores**
 const jwt = require("jsonwebtoken");
-const UnauthorizedError = require("../errors/unauthorized-error");
-const ForbiddenError = require("../errors/forbidden-err"); //Revisar si quitar o no
+const UnauthorizedError = require("../errors/unauthorized-err");
 const { NODE_ENV, JWT_SECRET } = process.env;
 
 module.exports = (req, res, next) => {
@@ -18,10 +18,10 @@ module.exports = (req, res, next) => {
       token,
       NODE_ENV === "production" ? JWT_SECRET : "dev-secret"
     );
-    req.user = payload;
   } catch (err) {
     return next(new UnauthorizedError("Se requiere autorizacion"));
   }
 
+  req.user = payload;
   return next();
 };

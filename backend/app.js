@@ -1,10 +1,8 @@
 require("dotenv").config();
-
 const express = require("express");
 const mongoose = require("mongoose");
 const { errors: celebrateErrors, celebrate, Joi } = require("celebrate");
-const validator = require("validator");
-const cors = require("cors");
+const { validateURL } = require("./middleware/validators");
 
 const { createUser, login } = require("./controllers/users");
 const { requestLogger, errorLogger } = require("./middleware/logger");
@@ -18,35 +16,63 @@ const NotFoundError = require("./errors/not-found-err");
 const { PORT = 3000 } = process.env;
 const app = express();
 
-//Conexion a MongoDB
-mongoose.connect("mongodb://localhost:27017/aroundb", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+const cors = require("cors");
 
-//Middlewares JSON
+const allowedOrigins = [
+  "https://aroundcr.minnsroad.com",
+  "https://www.aroundcr.minnsroad.com",
+  "https://api.aroundcr.minnsroad.com",
+  "http://localhost:3000",
+];
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error("Origin not allowed by CORS"));
+  },
+  methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "Accept",
+    "Origin",
+    "X-Requested-With",
+  ],
+  credentials: true,
+  optionsSuccessStatus: 204,
+};
+
+//Conexion a MongoDB
+mongoose
+  .connect("mongodb://localhost:27017/aroundb", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("Conectado a MongoDB"))
+  .catch((err) => console.error("Error al conectar a MongoDB:", err));
+
 app.use(express.json());
 
-app.use(cors());
-app.options("*", cors());
+//Configuración de CORS
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 app.use(requestLogger);
 
-//Validacion para URLs
-const validateURL = (value, helpers) => {
-  if (validator.isURL(value, { require_protocol: true })) {
-    return value;
-  }
-  return helpers.error("string.uri");
-};
-
+/*
+No creo que se deba usar throw
+//Ruta de prueba para crash (verifica que PM2 o reinicio automático funciona)
 app.get("/crash-test", () => {
   setTimeout(() => {
     throw new Error("El servidor va a caerse");
   }, 0);
 });
+*/
 
-//Rutas Publicas (no token)
+//Rutas publicas (no token)
 app.post(
   "/signup",
   celebrate({
@@ -72,16 +98,16 @@ app.post(
   login
 );
 
-//Auth global - todas las rutas que esten debajo de este middleware
 app.use(auth);
-
 app.use("/users", usersRouter);
 app.use("/cards", cardsRouter);
 
+//Middleware de manejo de errores centralizado
 app.use((req, res, next) => {
   next(new NotFoundError("Recurso solicitado no encontrado"));
 });
 
+//Middleware de manejo de errores Celebrate
 app.use(errorLogger);
 
 app.use(celebrateErrors());

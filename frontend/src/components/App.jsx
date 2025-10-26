@@ -42,15 +42,15 @@ export default function App() {
     auth
       .checkToken(token)
       .then((userData) => {
-        setCurrentUser(userData);
+        const userInfo = userData.data || userData;
+        setCurrentUser(userInfo);
         setLoggedIn(true);
 
         return Promise.all([api.getUserInfo(), api.getInitialCards()]);
       })
       .then(([userRes, cardsData]) => {
-        setCurrentUser(userRes);
+        setCurrentUser(userRes.data || userRes);
         setCards(Array.isArray(cardsData.data) ? cardsData.data : cardsData);
-        //setCards(cardsData)
       })
       .catch((err) => {
         console.error("Error al verificar el token:", err);
@@ -86,12 +86,11 @@ export default function App() {
       localStorage.setItem("jwt", token);
 
       const userData = await api.getUserInfo();
-      setCurrentUser(userData);
+      setCurrentUser(userData.data || userData);
       setLoggedIn(true);
 
       const cardsData = await api.getInitialCards();
       setCards(Array.isArray(cardsData.data) ? cardsData.data : cardsData);
-      //setCards(cardsData)
 
       setInfoToolTip({
         open: true,
@@ -155,16 +154,12 @@ export default function App() {
   const handleCardLike = async (card) => {
     try {
       const newCard = await api.toggleLike(card._id, !card.isLiked);
-      setCards(
-        (state) =>
-          state.map((currentCard) =>
-            currentCard._id === newCard.data._id ? newCard.data : currentCard
-          )
-        /*
+      setCards((state) =>
+        state.map((currentCard) =>
           currentCard._id === card._id
             ? { ...currentCard, isLiked: !currentCard.isLiked }
             : currentCard
-        )*/
+        )
       );
     } catch (err) {
       console.error(err);
